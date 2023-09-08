@@ -40,17 +40,29 @@ func GetListUser(res http.ResponseWriter, req *http.Request) {
 
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, email FROM users ORDER BY id ASC LIMIT 10")
-	if err != nil {
-		panic(err.Error())
+	var sqlRow *sql.Rows
+	var errSql error
+
+	UserID := req.URL.Query().Get("id")
+
+	if UserID == "" {
+		sqlRow, errSql = db.Query("SELECT id, email FROM users ORDER BY id ASC LIMIT 10")
+		if errSql != nil {
+			panic(errSql.Error())
+		}
+	} else {
+		sqlRow, errSql = db.Query("SELECT id, email from users where id = ?", UserID)
+		if errSql != nil {
+			panic(errSql.Error())
+		}
 	}
 
 	var userList []UserModels
 	user := UserModels{}
 
-	for rows.Next() {
+	for sqlRow.Next() {
 
-		if err := rows.Scan(&user.ID, &user.Email); err != nil {
+		if err := sqlRow.Scan(&user.ID, &user.Email); err != nil {
 			panic(err.Error())
 		}
 
